@@ -50,3 +50,83 @@ statement `fmt.Scanln(&input)` digunakna untuk men-capture inputan yang diketik 
 Data pertama (`number`) berisi hasil konversi, dan data kedua `err` berisi informasi error (jika memang terjadi error saat konversi).
 
 Setelah dilakukan pengecekan, ketika tidak ada error `number` ditampilkan, dan jika ada error, `input` ditampilkan beserta pesan errornya, untuk pesan error bisa dilihat dari method `Error()` milik tipe `error`.
+
+## membuat custom error sendiri
+
+kita juga bisa membuat object error sendiri (membuat custom error) dengan menggunakan function `errors.New()` (harus import package `errors` dulu)
+
+contoh pembuatan custom error, digunakan untuk pengecekan input apakah kosong atau tidak :
+
+```go
+package main
+
+import (
+  "errors"
+  "fmt"
+  "strings"
+)
+
+func Validate(input string) (bool, error){
+  if strings.TrimSpace(input) == "" {
+    return false, errors.New("cannot be empty")
+  }
+  return true, nil
+}
+
+func main(){
+  var name string
+  fmt.Print("masukkan nama anda : ")
+  fmt.Scanln(&name)
+
+  if valid, err := Validate(name); valid {
+    fmt.Println("Hello", name)
+  }else{
+    fmt.Println(err.Error())
+  }
+}
+```
+
+function `Validate` diatas mengembalikan 2 data, data pertama adalah boolean yang menandakan apakah inputan valid atau tidak, data kedua adalah pesan error-nya (jika inputan tidak valid A.K.A inputan kosong).
+
+function `strings.TrimSpace()` diatas digunakan untuk menghilangkan karakter spasi di awal dan di akhir string,
+ketika inputan tidak valid, error baru dibuat dengan memanfaatkan function `errors.New()`,
+selain itu object error bisa juga dibuat dengan menggunakan function `fmt.Errorf()`
+
+
+contoh penggunaan function `fmt.Errorf()`
+
+```go
+package main
+
+import (
+  "errors"
+  "fmt"
+  "strings"
+)
+
+func ValidateLengthPassword(input string) (bool, error) {
+	data := strings.TrimSpace(input)
+
+	if len(data) <= 8 {
+		return false, fmt.Errorf("panjang password harus lebih dari 8\npanjang password kamu : %d dengan value \"%s\"", len(data), data)
+	}
+	return true, nil
+}
+
+func main(){
+  var password string
+
+  fmt.Print("masukkan password kamu : ")
+	fmt.Scanln(&password)
+
+  	if valid, err := lib.ValidateLengthPassword(name); valid {
+		fmt.Printf("password kamu \"%s\"\n", name)
+	} else {
+		fmt.Println(err.Error())
+	}
+}
+```
+
+function `fmt.Errorf()` menerima minimal 1 parameter, parameter pertama adalah pesan errornya dalam bentuk string, dan setelahnya adalah parameter variadic dengan tipe any, jika parameter pertama mengandung format specifier seperti `%f`, `%d`, `%v`, `%s`, dll, maka parameter setelahnya adalah variabel atau data yang nantinya disimpan dalam format specifier yang telah ditentukan sebelumnya.
+
+Karena function `fmt.Errorf()` mengembalikan value bertipe `error`, maka juga bisa memanggil method `Error()`
