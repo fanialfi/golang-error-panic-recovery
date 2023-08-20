@@ -170,3 +170,107 @@ func main(){
 ```
 
 ketika program di atas dijalankan dan langsung tekan enter maka panic error akan muncul dan baris kode setelahnya tidak dieksekusi tapi statement yang didefer akan muncul sebelum panic error.
+
+## penggunaan function `recover()`
+
+recover digunakan untuk meng-handle panic error. 
+Pada saat panic error muncul, recover men-take over (mengambil alih) goruntine yang sedang panic (pesan panic tidak akan muncul)
+
+contoh :
+
+```go
+package main
+
+import (
+  "fmt"
+  "strings"
+  "errors"
+)
+
+func Catch() {
+	// jika nilai kembalian recover() tidak sama dengan nill (terjadi error)
+  // untuk menggunakan recover, anonymous function/ function/ closure function dimana recover() berada, harus di eksekusi dengan cara di defer
+	if r := recover(); r != nil {
+		fmt.Println("Error occured", r)
+	} else {
+		fmt.Println("Application running perfectly")
+	}
+}
+
+func Validate(input string) (bool, error) {
+	// function TrimSpace akan menghapus karakter spasi sebelum dan sesudah string
+	if strings.TrimSpace(input) == "" {
+		return false, errors.New("cannot be empty")
+	}
+	return true, nil
+}
+
+func main(){
+  // seperti yang sudah dijelaskan di atas, anonymous function/ function/ closure function dimana recover() berada, harus di eksekusi dengan cara di defer
+  defer Catch()
+
+  var name string
+  fmt.Printf("masukkan nama anda : ")
+  fmt.Scanln(&name)
+
+  if valid, err := Validate(name); valid {
+    fmt.Println("Hallo", name)
+  } else {
+    panic(err.Error())
+    fmt.Println("END")
+  }
+}
+```
+
+pada saat program di atas dijalankan ketika variabel `name` kosong, maka tidak akan memunculkan panic error seperti yang sudah didelkarasikan di statement `return false, errors.New("cannot be empty")` pada function `Validate`, melainkan panic error tersebut di handle oleh `Catch()` function yang telah di-defer sebelumnya.
+
+dan `recover()` hanya bisa menangkap panic error di goruntine itu sendiri, karena panic error terjadi di goruntine main, dan `recover()` dihandle di function `Catch()` yang telah didefer sebelumnya.
+sama seperti behaviour panic error, ketika ada statement yang di defer, maka statement yang didefer akan tetap di eksekusi, sebelum program benar benar menghentikan eksekusinya, baru panic error ditampilkan.
+
+contoh penerapan `recover()` pada function iife :
+
+```go
+package main
+
+import "fmt"
+
+func main(){
+  defer func(){
+    if r := recover(); r != nil {
+      fmt.Println("terjadi error dengan pesan :", r)
+    } else {
+      fmt.Println("tidak ada error")
+    }
+  }()
+
+  panic("Some error happen")
+}
+```
+
+contoh penerapan `recover()` pada perulangan, umumnya jika terjadi panic error maka proses setelahnya akan terhenti, mengakibatkan perulangan juga terhenti secara paksa, pada contoh berikut akan diterapkan cara handle panic error tanpa menghentikan program itu sendiri
+
+```go
+package main
+
+import "fmt"
+
+func main(){
+  hero := []string{"superman", "aquaman", "wonder woman"}
+
+  for _ item := range hero {
+    func(){
+      defer func(){
+        if r := recover(); r != nil{
+          fmt.Println("pannic occured  on lopping", item, "| message", r)
+        } else {
+          fmt.Pritln("application running perfect")
+        }
+      }()
+      panic(fmt.Errorf("some error happend on looping %s", item))
+    }()
+  }
+}
+```
+
+pada code di atas didalam sebuah perulangan terdapat sebuah function iife untuk recover panic dan juga kode untuk men-triger panic error secara paksa, ketika panic error terjadi, maka idealnya perulangan terhenti. 
+Tapi pada contoh di atas tidak, karena semua operasi sudah di bungkus kedalam iife, dan karena sifat panic error akan menghentikan proses block code yang ada di block function.
