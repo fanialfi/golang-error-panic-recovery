@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"golang/error-panic-recovery/lib"
-	"os"
 )
 
 func main() {
+	// ketika terjadi panic error, statement yang di defer berikut akan ditampilkan sebelum panic error
+	defer fmt.Println("Selamat datang di program saya")
 	var input string
 
 	// contoh sederhana penggunaan error
@@ -16,8 +17,9 @@ func main() {
 	num, err := lib.KonversiInt(input)
 
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
+		// fmt.Println(err.Error())
+		panic(err.Error())
+		fmt.Println("END 1")
 	}
 	fmt.Println(num)
 
@@ -29,7 +31,9 @@ func main() {
 	if valid, err := lib.Validate(name); valid {
 		fmt.Println("Hallo", name)
 	} else {
-		fmt.Println(err.Error())
+		// fmt.Println(err.Error())
+		panic(err.Error())
+		fmt.Println("END 2")
 	}
 
 	// contoh penggunaan pembuatan error sendiri dengan function fmt,Errorf()
@@ -39,6 +43,8 @@ func main() {
 	if valid, err := lib.ValidateLengthPassword(name); valid {
 		fmt.Printf("password kamu \"%s\"\n", name)
 	} else {
-		fmt.Println(err.Error())
+		// fmt.Println(err.Error())
+		panic(err.Error())
+		fmt.Println("END 3")
 	}
 }

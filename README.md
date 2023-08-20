@@ -130,3 +130,43 @@ func main(){
 function `fmt.Errorf()` menerima minimal 1 parameter, parameter pertama adalah pesan errornya dalam bentuk string, dan setelahnya adalah parameter variadic dengan tipe any, jika parameter pertama mengandung format specifier seperti `%f`, `%d`, `%v`, `%s`, dll, maka parameter setelahnya adalah variabel atau data yang nantinya disimpan dalam format specifier yang telah ditentukan sebelumnya.
 
 Karena function `fmt.Errorf()` mengembalikan value bertipe `error`, maka juga bisa memanggil method `Error()`
+
+## Penggunaan function `panic()`
+
+`panic()` digunakan untuk menampilkan _stack trace error_ sekaligus menghentikan flow goruntine (karena `main()` juga goruntine, maka behaviour yang sama juga berlaku), setelah ada panic maka proses setelahnya akan berhenti kecuali proses yang sudah di-`defer` sebelumnya (akan muncul sebelum panic error), panic menampilkan pesan error sama seperti `fmt.Println()` namun informasi yang ditampilkan adalah _stack trace error_ jadi sangat mendetail.
+
+pada codingan sebelumnya, pada program yang telah dibuat tadi function `fmt.Println()` untuk menampilkan informasi error akan diganti menggunakan `panic()`, pada program baris pertama setelah deklarasi function `main()` tambahkan statement yang di-`defer` dan setelah panic tambahkan statement untuk mencetak sembarang tulisan seperti berikut :
+
+```go
+package main
+
+import (
+  "errors"
+  "fmt"
+  "strings"
+)
+
+func Validate(input string) (bool, error){
+  if strings.TrimSpace(input) == "" {
+    return false, errors.New("cannot be empty")
+  }
+  return true, nil
+}
+
+func main(){
+  defer fmt.Println("Program berjalan")
+  var name string
+  fmt.Print("masukkan nama anda : ")
+  fmt.Scanln(&name)
+
+  if valid, err := Validate(name); valid {
+    fmt.Println("Hello", name)
+  }else{
+    // fmt.Println(err.Error())
+    panic(err.Error())
+    fmt.Println("END")
+  }
+}
+```
+
+ketika program di atas dijalankan dan langsung tekan enter maka panic error akan muncul dan baris kode setelahnya tidak dieksekusi tapi statement yang didefer akan muncul sebelum panic error.
